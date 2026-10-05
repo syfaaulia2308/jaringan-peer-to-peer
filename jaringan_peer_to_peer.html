@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jaringan Peer to Peer • Sharing Data</title>
+<style>
+:root {
+  --bg: #f5f1ea;
+  --paper: #fffdf9;
+  --ink: #252525;
+  --muted: #6d675f;
+  --accent: #8b6f47;
+  --accent2: #d9c5a3;
+  --line: #e4dacb;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Segoe UI", Arial, sans-serif;
+  overflow: hidden;
+}
+.presentation {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.slide {
+  width: min(92vw, 1280px);
+  aspect-ratio: 16 / 9;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 18px 55px rgba(60,45,25,.12);
+  position: relative;
+  overflow: hidden;
+  display: none;
+}
+.slide.active { display: block; }
+.slide::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 9px;
+  background: linear-gradient(180deg, var(--accent), var(--accent2));
+}
+.content {
+  position: absolute;
+  inset: 0;
+  padding: 7% 8%;
+}
+.title {
+  font-size: clamp(28px, 4vw, 58px);
+  line-height: 1.08;
+  font-weight: 800;
+  letter-spacing: -.03em;
+  margin: 0 0 16px;
+}
+.subtitle {
+  font-size: clamp(16px, 1.8vw, 26px);
+  color: var(--muted);
+  line-height: 1.45;
+}
+.section-title {
+  font-size: clamp(26px, 3.2vw, 46px);
+  font-weight: 800;
+  margin: 0 0 30px;
+}
+.body {
+  font-size: clamp(15px, 1.55vw, 23px);
+  line-height: 1.65;
+}
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0,1fr));
+  gap: 22px;
+}
+.card {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 22px;
+  background: #fffaf2;
+}
+.label {
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  margin-bottom: 7px;
+}
+.ip {
+  font-family: Consolas, monospace;
+  font-size: clamp(20px, 2vw, 32px);
+  font-weight: 700;
+}
+ul { margin: 0; padding-left: 1.25em; }
+li { margin: .45em 0; }
+.footer {
+  position: absolute;
+  left: 8%;
+  right: 6%;
+  bottom: 4%;
+  display: flex;
+  justify-content: space-between;
+  color: var(--muted);
+  font-size: 13px;
+  letter-spacing: .04em;
+}
+.cover {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.cover .content { position: static; padding: 8%; }
+.cover .title { max-width: 900px; margin: 0 auto 18px; }
+.cover .subtitle { max-width: 760px; margin: 0 auto 28px; }
+.meta { color: var(--muted); line-height: 1.7; font-size: 16px; }
+.topology {
+  display: flex; align-items: center; justify-content: center;
+  gap: 4vw; margin-top: 40px;
+}
+.pc {
+  border: 2px solid var(--accent);
+  border-radius: 14px;
+  padding: 25px 35px;
+  text-align: center;
+  background: #fffaf2;
+  font-weight: 800;
+}
+.cable {
+  width: 14vw; height: 4px;
+  background: var(--accent);
+  position: relative;
+}
+.cable::after {
+  content: "KABEL LAN / UTP";
+  position: absolute;
+  width: 180px;
+  left: 50%; top: 14px;
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: 12px; color: var(--muted);
+}
+.note {
+  margin-top: 28px;
+  padding: 16px 20px;
+  border-left: 4px solid var(--accent);
+  background: #faf4ea;
+  line-height: 1.5;
+}
+.code {
+  display: inline-block;
+  background: #262626;
+  color: #fff;
+  border-radius: 9px;
+  padding: 14px 18px;
+  font: 700 clamp(16px, 1.6vw, 24px) Consolas, monospace;
+  margin: 8px 0 16px;
+}
+.controls {
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255,255,255,.9);
+  border: 1px solid var(--line);
+  padding: 8px 12px;
+  border-radius: 999px;
+  box-shadow: 0 8px 30px rgba(0,0,0,.1);
+  z-index: 10;
+}
+button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  color: var(--ink);
+  font-size: 18px;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+button:hover { background: #eee6da; }
+.counter { min-width: 58px; text-align: center; font-size: 13px; }
+.progress {
+  position: fixed; left: 0; top: 0; height: 4px;
+  background: var(--accent); width: 0; z-index: 20;
+}
+@media (max-width: 700px) {
+  .presentation { padding: 8px; }
+  .slide { border-radius: 10px; }
+  .content { padding: 8% 7%; }
+  .card-grid { grid-template-columns: 1fr; gap: 10px; }
+  .card { padding: 12px; }
+  .body { line-height: 1.35; }
+}
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<div class="presentation" id="presentation"></div>
+
+<div class="controls">
+  <button onclick="prevSlide()" aria-label="Previous">←</button>
+  <span class="counter" id="counter">1 / 14</span>
+  <button onclick="nextSlide()" aria-label="Next">→</button>
+  <button onclick="toggleFullscreen()" aria-label="Fullscreen">⛶</button>
+</div>
+
+<script>
+const sourceSlides = [[{"text": "MEMBUAT JARINGAN\nPEER TO PEER", "paragraphs": ["MEMBUAT JARINGAN", "PEER TO PEER"], "left": 0.10125, "top": 0.22666666666666666, "width": 0.4460008202099738, "height": 0.19522134733158356}, {"text": "Menggunakan Kabel LAN untuk Sharing Data", "paragraphs": ["Menggunakan Kabel LAN untuk Sharing Data"], "left": 0.105, "top": 0.4700323709536308, "width": 0.44758390748031496, "height": 0.06282983377077865}, {"text": "KOMPUTER 1\n192.168.1.1", "paragraphs": ["KOMPUTER 1", "192.168.1.1"], "left": 0.12068290682414698, "top": 0.6348610382035579, "width": 0.21879084645669292, "height": 0.10322047244094489}, {"text": "KOMPUTER 2\n192.168.1.2", "paragraphs": ["KOMPUTER 2", "192.168.1.2"], "left": 0.6843491633858267, "top": 0.636709390492855, "width": 0.1598766404199475, "height": 0.10322047244094489}, {"text": "KABEL LAN / UTP", "paragraphs": ["KABEL LAN / UTP"], "left": 0.3802490157480315, "top": 0.6338710994459026, "width": 0.2506884842519685, "height": 0.05834208223972003}, {"text": "Nama: SYIFA AULIA     NIM: 062640723237   Kelas: 1 TI B", "paragraphs": ["Nama: SYIFA AULIA     NIM: 062640723237   Kelas: 1 TI B"], "left": 0.6973115157480315, "top": 0.21115296004666084, "width": 0.2506884842519685, "height": 0.14809900845727617}, {"text": "Mata kuliah: Jaringan Komputer\nDosen Pengampu: Dr. Ali Firdaus, S.Kom., M. Kom", "paragraphs": ["Mata kuliah: Jaringan Komputer", "Dosen Pengampu: Dr. Ali Firdaus, S.Kom., M. Kom"], "left": 0.06, "top": 0.8981625838436862, "width": 0.6420788221784777, "height": 0.08526902887139108}], [{"text": "Pengertian Peer to Peer", "paragraphs": ["Pengertian Peer to Peer"], "left": 0.05625, "top": 0.07333333333333333, "width": 0.3025720964566929, "height": 0.07404943132108487}, {"text": "Konsep dasar jaringan yang digunakan dalam praktik", "paragraphs": ["Konsep dasar jaringan yang digunakan dalam praktik"], "left": 0.0585, "top": 0.16666666666666666, "width": 0.4632299868766404, "height": 0.05834208223972003}, {"text": "Apa itu Peer to Peer?", "paragraphs": ["Apa itu Peer to Peer?"], "left": 0.08625, "top": 0.28, "width": 0.20751738845144357, "height": 0.05834208223972003}, {"text": "Peer to Peer (P2P) adalah jaringan yang menghubungkan komputer secara langsung sehingga setiap komputer dapat saling berkomunikasi dan berbagi data tanpa server khusus.", "paragraphs": ["Peer to Peer (P2P) adalah jaringan yang menghubungkan komputer secara langsung sehingga setiap komputer dapat saling berkomunikasi dan berbagi data tanpa server khusus."], "left": 0.08625, "top": 0.33336541265675124, "width": 0.83025, "height": 0.10322047244094489}, {"text": "Dalam praktik ini", "paragraphs": ["Dalam praktik ini"], "left": 0.08625, "top": 0.5076754155730534, "width": 0.17620939960629922, "height": 0.05834208223972003}, {"text": "Dua komputer dihubungkan menggunakan kabel LAN dan diberi IP Address dalam satu jaringan.", "paragraphs": ["Dua komputer dihubungkan menggunakan kabel LAN dan diberi IP Address dalam satu jaringan."], "left": 0.08625, "top": 0.556567512394284, "width": 0.40187508202099737, "height": 0.14809900845727617}, {"text": "Hasil yang diharapkan", "paragraphs": ["Hasil yang diharapkan"], "left": 0.5325, "top": 0.5266666666666666, "width": 0.2206496062992126, "height": 0.05834208223972003}, {"text": "Kedua komputer dapat melakukan komunikasi dan sharing folder atau file.", "paragraphs": ["Kedua komputer dapat melakukan komunikasi dan sharing folder atau file."], "left": 0.5325, "top": 0.5605934674832312, "width": 0.36562508202099736, "height": 0.10322047244094489}, {"text": "Jaringan Peer to Peer • Sharing Data                                      2", "paragraphs": ["Jaringan Peer to Peer • Sharing Data                                      2"], "left": 0.04914468503937008, "top": 0.9266666666666666, "width": 0.5315994914698162, "height": 0.05834208223972003}], [{"text": "Tujuan Praktikum", "paragraphs": ["Tujuan Praktikum"], "left": 0.0705, "top": 0.12, "width": 0.2421017880577428, "height": 0.07404943132108487}, {"text": "• Menghubungkan dua komputer menggunakan kabel LAN.\n• Mengatur IP Address pada masing-masing komputer.\n• Menguji koneksi antar komputer menggunakan perintah ping.\n• Membuat folder yang dapat diakses bersama.\n• Melakukan sharing data melalui jaringan lokal.", "paragraphs": ["• Menghubungkan dua komputer menggunakan kabel LAN.", "• Mengatur IP Address pada masing-masing komputer.", "• Menguji koneksi antar komputer menggunakan perintah ping.", "• Membuat folder yang dapat diakses bersama.", "• Melakukan sharing data melalui jaringan lokal."], "left": 0.0825, "top": 0.24, "width": 0.81, "height": 0.3425723242927967}, {"text": "Jaringan Peer to Peer • Sharing Data                                      3", "paragraphs": ["Jaringan Peer to Peer • Sharing Data                                      3"], "left": 0.0389072342519685, "top": 0.9402104111986002, "width": 0.5315994914698162, "height": 0.05834208223972003}], [{"text": "Alat dan Bahan", "paragraphs": ["Alat dan Bahan"], "left": 0.0675, "top": 0.12297521143190435, "width": 0.20605528215223098, "height": 0.07404943132108487}, {"text": "2 Laptop / Komputer", "paragraphs": ["2 Laptop / Komputer"], "left": 0.08625, "top": 0.26666666666666666, "width": 0.20605528215223098, "height": 0.05834208223972003}, {"text": "Digunakan sebagai dua perangkat peer.", "paragraphs": ["Digunakan sebagai dua perangkat peer."], "left": 0.08625, "top": 0.33066666666666666, "width": 0.20605528215223098, "height": 0.10322047244094489}, {"text": "1 Kabel LAN / UTP", "paragraphs": ["1 Kabel LAN / UTP"], "left": 0.345, "top": 0.26666666666666666, "width": 0.19290731627296587, "height": 0.05834208223972003}, {"text": "Media penghubung kedua perangkat.", "paragraphs": ["Media penghubung kedua perangkat."], "left": 0.345, "top": 0.33066666666666666, "width": 0.19424983595800524, "height": 0.10322047244094489}, {"text": "Port Ethernet", "paragraphs": ["Port Ethernet"], "left": 0.60375, "top": 0.26666666666666666, "width": 0.13952649278215223, "height": 0.05834208223972003}, {"text": "Port jaringan pada komputer.", "paragraphs": ["Port jaringan pada komputer."], "left": 0.60375, "top": 0.33066666666666666, "width": 0.18572367125984252, "height": 0.10322047244094489}, {"text": "Windows", "paragraphs": ["Windows"], "left": 0.08625, "top": 0.5666666666666667, "width": 0.09891494422572178, "height": 0.05834208223972003}, {"text": "Sistem operasi untuk konfigurasi jaringan.", "paragraphs": ["Sistem operasi untuk konfigurasi jaringan."], "left": 0.08625, "top": 0.6306666666666667, "width": 0.20693011811023623, "height": 0.10322047244094489}, {"text": "File / Folder", "paragraphs": ["File / Folder"], "left": 0.345, "top": 0.5666666666666667, "width": 0.12480068897637796, "height": 0.05834208223972003}, {"text": "Data yang akan dibagikan.", "paragraphs": ["Data yang akan dibagikan."], "left": 0.345, "top": 0.6290087489063867, "width": 0.16847375328083988, "height": 0.10322047244094489}, {"text": "Jaringan Peer to Peer • Sharing Data                                      4", "paragraphs": ["Jaringan Peer to Peer • Sharing Data                                      4"], "left": 0.04785867782152231, "top": 0.9289346748323126, "width": 0.5315994914698162, "height": 0.05834208223972003}], [{"text": "Topologi Jaringan", "paragraphs": ["Topologi Jaringan"], "left": 0.05625, "top": 0.07333333333333333, "width": 0.24397941272965878, "height": 0.0762933799941674}, {"text": "Dua komputer terhubung langsung menggunakan kabel LAN", "paragraphs": ["Dua komputer terhubung langsung menggunakan kabel LAN"], "left": 0.0585, "top": 0.16666666666666666, "width": 0.5301532972440944, "height": 0.05834208223972003}, {"text": "KOMPUTER 1\n192.168.1.1", "paragraphs": ["KOMPUTER 1", "192.168.1.1"], "left": 0.09129511154855643, "top": 0.35333333333333333, "width": 0.15490969488188977, "height": 0.10322047244094489}, {"text": "KOMPUTER 2\n192.168.1.2", "paragraphs": ["KOMPUTER 2", "192.168.1.2"], "left": 0.7437951115485564, "top": 0.35333333333333333, "width": 0.15490969488188977, "height": 0.10322047244094489}, {"text": "KABEL LAN / UTP", "paragraphs": ["KABEL LAN / UTP"], "left": 0.4007080872703412, "top": 0.37733333333333335, "width": 0.19608382545931757, "height": 0.05834208223972003}, {"text": "Kedua komputer harus menggunakan IP Address yang berbeda, tetapi berada pada jaringan yang sama.", "paragraphs": ["Kedua komputer harus menggunakan IP Address yang berbeda, tetapi berada pada jaringan yang sama."], "left": 0.05826336942257218, "top": 0.6066666666666667, "width": 0.8809731791338583, "height": 0.05834208223972003}, {"text": "Jaringan Peer to Peer • Sharing Data                                      5", "paragraphs": ["Jaringan Peer to Peer • Sharing Data                                      5"], "left": 0.0525, "top": 0.930419072615923, "width": 0.5315994914698162, "height": 0.05834208223972003}], [{"text": "Konfigurasi IP Address", "paragraphs": ["Konfigurasi IP Address"], "left": 0.05625, "top": 0.07333333333333333, "width": 0.30916707677165356, "height": 0.0762933799941674}, {"text": "Contoh pembagian alamat IP untuk jaringan sederhana", "paragraphs": ["Contoh pembagian alamat IP untuk jaringan sederhana"], "left": 0.0585, "top": 0.16666666666666666, "width": 0.4752052165354331, "height": 0.05834208223972003}, {"text": "Komputer 1", "paragraphs": ["Komputer 1"], "left": 0.09, "top": 0.28, "width": 0.12389616141732283, "height": 0.05834208223972003}, {"text": "IP Address\u000b192.168.1.1\u000b\u000bSubnet Mask\u000b255.255.255.0", "paragraphs": ["IP Address\u000b192.168.1.1\u000b\u000bSubnet Mask\u000b255.255.255.0"], "left": 0.09, "top": 0.344, "width": 0.1361080216535433, "height": 0.23785593467483232}, {"text": "Komputer 2", "paragraphs": ["Komputer 2"], "left": 0.54375, "top": 0.28, "width": 0.12389616141732283, "height": 0.05834208223972003}, {"text": "IP Address\u000b192.168.1.2\u000b\u000bSubnet Mask\u000b255.255.255.0", "paragraphs": ["IP Address\u000b192.168.1.2\u000b\u000bSubnet Mask\u000b255.255.255.0"], "left": 0.54375, "top": 0.344, "width": 0.1361080216535433, "height": 0.23785593467483232}, {"text": "Catatan", "paragraphs": ["Catatan"], "left": 0.16875, "top": 0.6426666666666667, "width": 0.120059219160105, "height": 0.05834208223972003}, {"text": "Gateway dan DNS dapat dikosongkan karena jaringan digunakan untuk komunikasi langsung antar komputer.", "paragraphs": ["Gateway dan DNS dapat dikosongkan karena jaringan digunakan untuk komunikasi langsung antar komputer."], "left": 0.16875008202099737, "top": 0.6893498104403616, "width": 0.70625, "height": 0.10322047244094489}, {"text": "Jaringan Peer to Peer • Sharing Data                                      6", "paragraphs": ["Jaringan Peer to Peer • Sharing Data                                      6"], "left": 0.05625, "top": 0.9283810148731408, "width": 0.5315994914698162, "height": 0.05834208223972003}], [{"text": "Cara Mengatur IP Address", "paragraphs": ["Cara Mengatur IP Address"], "left": 0.05625, "top": 0.07333333333333333, "width": 0.3551798720472441, "height": 0.0762933799941674}, {"text": "• Buka Control Panel.\n• Pilih Network and Sharing Center.\n• Pilih Change adapter settings.\n• Klik kanan Ethernet → Properties.\n• Pilih Internet Protocol Version 4 (TCP/IPv4).\n• Pilih Use the following IP address lalu masukkan IP sesuai komputer.\n• Klik OK dan simpan pengaturan.", "paragraphs": ["• Buka Control Panel.", "• Pilih Network and Sharing Center.", "• Pilih Change adapter settings.", "• Klik kanan Ethernet → Properties.", "• Pilih Internet Protocol Version 4 (TCP/IPv4).", "• Pilih Use the following IP address lalu masukkan IP sesuai komputer.", "• Klik OK dan simpan pengaturan."], "left": 0.075, "top": 0.22666666666666666, "width": 0.84, "height": 0.4846875182268883}, {"text": "Jaringan Peer to Peer • Sharing Data                                      7", "paragraphs": ["Jaringan Peer to Peer • Sharing Data                                      7"], "left": 0.05625, "top": 0.9331428988043161, "width": 0.5315994914698162, "height": 0.05834208223972003}], [{"text": "Menguji Koneksi dengan PING", "paragraphs": ["Menguji Koneksi dengan PING"], "left": 0.05625, "top": 0.07333333333333333, "width": 0.41208431758530184, "height": 0.0762933799941674}, {"text": "Dari Komputer 1", "paragraphs": ["Dari Komputer 1"], "left": 0.08625, "top": 0.26, "width": 0.1700456036745407, "height": 0.05834208223972003}, {"text": "Buka Command Prompt (CMD), lalu ketik:\u000b\u000bping 192.168.1.2\u000b\u000bJika muncul “Reply from 192.168.1.2”, koneksi berhasil.", "paragraphs": ["Buka Command Prompt (CMD), lalu ketik:\u000b\u000bping 192.168.1.2\u000b\u000bJika muncul “Reply from 192.168.1.2”, koneksi berhasil."], "left": 0.08625008202099738, "top": 0.324, "width": 0.36464288057742783, "height": 0.32761286089238845}, {"text": "Dari Komputer 2", "paragraphs": ["Dari Komputer 2"], "left": 0.53625, "top": 0.26, "width": 0.1700456036745407, "height": 0.05834208223972003}, {"text": "Lakukan pengujian sebaliknya:\u000b\u000bping 192.168.1.1\u000b\u000bJika mendapatkan reply, kedua komputer sudah saling terhubung.", "paragraphs": ["Lakukan pengujian sebaliknya:\u000b\u000bping 192.168.1.1\u000b\u000bJika mendapatkan reply, kedua komputer sudah saling terhubung."], "left": 0.538, "top": 0.33203382910469526, "width": 0.3774999179790026, "height": 0.28273432487605715}, {"text": "Jaringan Peer to Peer • Sharing Data                                      8", "paragraphs": ["Jaringan Peer to Peer • Sharing Data                                      8"], "left": 0.05625, "top": 0.9273651210265383, "width": 0.5315994914698162, "height": 0.05834208223972003}], [{"text": "Sharing Folder", "paragraphs": ["Sharing Folder"], "left": 0.05625, "top": 0.07333333333333333, "width": 0.20579232283464566, "height": 0.0762933799941674}, {"text": "• Pilih folder yang ingin dibagikan.\n• Klik kanan folder → Properties.\n• Pilih tab Sharing.\n• Klik Advanced Sharing.\n• Centang Share this folder.\n• Atur Permissions jika diperlukan.\n• Klik Apply → OK.", "paragraphs": ["• Pilih folder yang ingin dibagikan.", "• Klik kanan folder → Properties.", "• Pilih tab Sharing.", "• Klik Advanced Sharing.", "• Centang Share this folder.", "• Atur Permissions jika diperlukan.", "• Klik Apply → OK."], "left": 0.075, "top": 0.22666666666666666, "width": 0.84, "height": 0.4846875182268883}, {"text": "Jaringan Peer to Peer • Sharing Data                                      9", "paragraphs": ["Jaringan Peer to Peer • Sharing Data                                      9"], "left": 0.05625, "top": 0.9266666666666666, "width": 0.5315994914698162, "height": 0.05834208223972003}], [{"text": "Mengakses Data dari Komputer Lain", "paragraphs": ["Mengakses Data dari Komputer Lain"], "left": 0.05625, "top": 0.07333333333333333, "width": 0.48583932086614173, "height": 0.0762933799941674}, {"text": "1. Buka Run", "paragraphs": ["1. Buka Run"], "left": 0.09375, "top": 0.26666666666666666, "width": 0.1280877624671916, "height": 0.05834208223972003}, {"text": "Tekan:\u000b\u000bWindows + R", "paragraphs": ["Tekan:\u000b\u000bWindows + R"], "left": 0.09975, "top": 0.3516754155730534, "width": 0.1313220964566929, "height": 0.14809900845727617}, {"text": "2. Masukkan alamat", "paragraphs": ["2. Masukkan alamat"], "left": 0.34875, "top": 0.26666666666666666, "width": 0.19908694225721785, "height": 0.05834208223972003}, {"text": "Ketik:\u000b\u000b\\\\192.168.1.1\u000b\u000blalu tekan Enter.", "paragraphs": ["Ketik:\u000b\u000b\\\\192.168.1.1\u000b\u000blalu tekan Enter."], "left": 0.35475, "top": 0.35670589093030036, "width": 0.1521695374015748, "height": 0.23785593467483232}, {"text": "3. Akses folder", "paragraphs": ["3. Akses folder"], "left": 0.60375, "top": 0.26666666666666666, "width": 0.14651599409448818, "height": 0.05834208223972003}, {"text": "Folder yang sudah dibagikan akan muncul dan dapat diakses sesuai izin.", "paragraphs": ["Folder yang sudah dibagikan akan muncul dan dapat diakses sesuai izin."], "left": 0.6081785597112861, "top": 0.34992271799358415, "width": 0.1846428805774278, "height": 0.19297739865850103}, {"text": "Jaringan Peer to Peer • Sharing Data                                      10", "paragraphs": ["Jaringan Peer to Peer • Sharing Data                                      10"], "left": 0.054955216535433074, "top": 0.9266666666666666, "width": 0.5421179461942257, "height": 0.05834208223972003}], [{"text": "Hasil Praktikum", "paragraphs": ["Hasil Praktikum"], "left": 0.05625, "top": 0.09718664333624964, "width": 0.22551435367454067, "height": 0.0762933799941674}, {"text": "• Kedua komputer berhasil terhubung menggunakan kabel LAN.\n• IP Address berhasil dikonfigurasi sesuai jaringan.\n• Koneksi antar komputer berhasil diuji dengan ping.\n• Folder berhasil dibagikan melalui jaringan.\n• Data dapat diakses dari komputer yang terhubung.", "paragraphs": ["• Kedua komputer berhasil terhubung menggunakan kabel LAN.", "• IP Address berhasil dikonfigurasi sesuai jaringan.", "• Koneksi antar komputer berhasil diuji dengan ping.", "• Folder berhasil dibagikan melalui jaringan.", "• Data dapat diakses dari komputer yang terhubung."], "left": 0.07875, "top": 0.24666666666666667, "width": 0.825, "height": 0.3425723242927967}, {"text": "Jaringan Peer to Peer • Sharing Data                                      11", "paragraphs": ["Jaringan Peer to Peer • Sharing Data                                      11"], "left": 0.05625, "top": 0.9254956255468066, "width": 0.5413395669291339, "height": 0.05834208223972003}], [{"text": "Jika Koneksi Tidak Berhasil", "paragraphs": ["Jika Koneksi Tidak Berhasil"], "left": 0.05625, "top": 0.07333333333333333, "width": 0.3731557578740157, "height": 0.0762933799941674}, {"text": "Beberapa hal yang dapat diperiksa", "paragraphs": ["Beberapa hal yang dapat diperiksa"], "left": 0.0585, "top": 0.16666666666666666, "width": 0.3045337926509186, "height": 0.05834208223972003}, {"text": "1. Periksa kabel", "paragraphs": ["1. Periksa kabel"], "left": 0.08625, "top": 0.26, "width": 0.15819660433070867, "height": 0.05834208223972003}, {"text": "Pastikan kabel LAN terpasang dengan benar dan indikator Ethernet aktif.", "paragraphs": ["Pastikan kabel LAN terpasang dengan benar dan indikator Ethernet aktif."], "left": 0.08625, "top": 0.33066666666666666, "width": 0.2475, "height": 0.14809900845727617}, {"text": "2. Periksa IP", "paragraphs": ["2. Periksa IP"], "left": 0.3868471948818898, "top": 0.2580169145523476, "width": 0.13019143700787403, "height": 0.05834208223972003}, {"text": "Pastikan kedua IP berada pada jaringan yang sama dan tidak sama persis.", "paragraphs": ["Pastikan kedua IP berada pada jaringan yang sama dan tidak sama persis."], "left": 0.38500565944881887, "top": 0.3250087489063867, "width": 0.2372386811023622, "height": 0.14809900845727617}, {"text": "3. Uji kembali", "paragraphs": ["3. Uji kembali"], "left": 0.68625, "top": 0.2501119860017498, "width": 0.1417616469816273, "height": 0.05834208223972003}, {"text": "Gunakan ping dan periksa firewall atau pengaturan Network Sharing jika diperlukan.", "paragraphs": ["Gunakan ping dan periksa firewall atau pengaturan Network Sharing jika diperlukan."], "left": 0.681, "top": 0.307022601341499, "width": 0.2515, "height": 0.19297739865850103}, {"text": "Jaringan Peer to Peer • Sharing Data                                      12", "paragraphs": ["Jaringan Peer to Peer • Sharing Data                                      12"], "left": 0.05625, "top": 0.9281951006124235, "width": 0.5421179461942257, "height": 0.05834208223972003}], [{"text": "Kesimpulan", "paragraphs": ["Kesimpulan"], "left": 0.05625, "top": 0.07333333333333333, "width": 0.16740018044619423, "height": 0.0762933799941674}, {"text": "Kesimpulan", "paragraphs": ["Kesimpulan"], "left": 0.09375, "top": 0.26666666666666666, "width": 0.12361745406824147, "height": 0.05834208223972003}, {"text": "Jaringan Peer to Peer dapat menghubungkan dua komputer secara langsung menggunakan kabel LAN. Dengan IP Address yang berada dalam satu jaringan, komputer dapat saling berkomunikasi dan melakukan sharing data tanpa membutuhkan server khusus.", "paragraphs": ["Jaringan Peer to Peer dapat menghubungkan dua komputer secara langsung menggunakan kabel LAN. Dengan IP Address yang berada dalam satu jaringan, komputer dapat saling berkomunikasi dan melakukan sharing data tanpa membutuhkan server khusus."], "left": 0.09375, "top": 0.33298337707786524, "width": 0.6616070374015748, "height": 0.23785593467483232}, {"text": "Jaringan sederhana dapat membuat proses berbagi data menjadi lebih mudah dan cepat.", "paragraphs": ["Jaringan sederhana dapat membuat proses berbagi data menjadi lebih mudah dan cepat."], "left": 0.11519685039370078, "top": 0.74, "width": 0.7671062992125984, "height": 0.05834208223972003}, {"text": "Jaringan Peer to Peer • Sharing Data                                      13", "paragraphs": ["Jaringan Peer to Peer • Sharing Data                                      13"], "left": 0.05625, "top": 0.9294603382910469, "width": 0.5421179461942257, "height": 0.05834208223972003}], [{"text": "TERIMA KASIH", "paragraphs": ["TERIMA KASIH"], "left": 0.3248230807086614, "top": 0.29333333333333333, "width": 0.34785375656167977, "height": 0.10770836978710994}, {"text": "Ada pertanyaan?", "paragraphs": ["Ada pertanyaan?"], "left": 0.40610925196850395, "top": 0.44666666666666666, "width": 0.18528149606299213, "height": 0.06731773111694371}, {"text": "Peer to Peer • LAN • Sharing Data", "paragraphs": ["Peer to Peer • LAN • Sharing Data"], "left": 0.3366063812335958, "top": 0.616, "width": 0.3242873195538058, "height": 0.05834208223972003}]];
+const titles = [
+  "MEMBUAT JARINGAN PEER TO PEER",
+  "Pengertian Peer to Peer",
+  "Tujuan Praktikum",
+  "Alat dan Bahan",
+  "Topologi Jaringan",
+  "Konfigurasi IP Address",
+  "Cara Mengatur IP Address",
+  "Menguji Koneksi dengan PING",
+  "Sharing Folder",
+  "Mengakses Data dari Komputer Lain",
+  "Hasil Praktikum",
+  "Jika Koneksi Tidak Berhasil",
+  "Kesimpulan",
+  "TERIMA KASIH"
+];
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function makeSlide(items, index) {
+  const el = document.createElement('section');
+  el.className = 'slide' + (index === 0 ? ' active cover' : '');
+  const c = document.createElement('div');
+  c.className = 'content';
+
+  // Recreate the PPT content faithfully from extracted text,
+  // while using a clean HTML presentation theme.
+  const all = items.map(x => x.text).join('\n');
+  const heading = index === 0 ? all.split('\n')[0] : (titles[index] || all.split('\n')[0]);
+
+  let html = '';
+  if (index === 0) {
+    html += '<h1 class="title">' + esc(heading) + '</h1>';
+    const rest = all.split('\n').slice(1).filter(Boolean);
+    if (rest[0]) html += '<div class="subtitle">' + esc(rest[0]) + '</div>';
+    if (rest.length > 1) {
+      html += '<div class="meta" style="margin-top:28px">' + rest.slice(-4).map(esc).join('<br>') + '</div>';
+    }
+  } else {
+    html += '<h2 class="section-title">' + esc(heading) + '</h2>';
+    const content = items.filter(x => x.text !== heading);
+    html += '<div class="body">';
+
+    if (index === 4) {
+      html += '<div class="topology">';
+      html += '<div class="pc">KOMPUTER 1<br><span class="ip">192.168.1.1</span></div>';
+      html += '<div class="cable"></div>';
+      html += '<div class="pc">KOMPUTER 2<br><span class="ip">192.168.1.2</span></div>';
+      html += '</div>';
+      html += '<div class="note">Kedua komputer harus menggunakan IP Address yang berbeda, tetapi berada pada jaringan yang sama.</div>';
+    } else if (index === 5) {
+      html += '<div class="card-grid">';
+      html += '<div class="card"><div class="label">Komputer 1</div><div class="ip">192.168.1.1</div><p>Subnet Mask<br><b>255.255.255.0</b></p></div>';
+      html += '<div class="card"><div class="label">Komputer 2</div><div class="ip">192.168.1.2</div><p>Subnet Mask<br><b>255.255.255.0</b></p></div>';
+      html += '</div><div class="note">Gateway dan DNS dapat dikosongkan karena jaringan digunakan untuk komunikasi langsung antar komputer.</div>';
+    } else if (index === 7) {
+      html += '<p><b>Dari Komputer 1</b></p><div class="code">ping 192.168.1.2</div><p>Jika muncul “Reply from 192.168.1.2”, koneksi berhasil.</p>';
+      html += '<p><b>Dari Komputer 2</b></p><div class="code">ping 192.168.1.1</div><p>Jika mendapatkan reply, kedua komputer sudah saling terhubung.</p>';
+    } else if (index === 9) {
+      html += '<p><b>1. Buka Run</b><br>Tekan:</p><div class="code">Windows + R</div>';
+      html += '<p><b>2. Masukkan alamat</b><br>Ketik:</p><div class="code">\\192.168.1.1</div>';
+      html += '<p><b>3. Akses folder</b><br>Folder yang sudah dibagikan akan muncul dan dapat diakses sesuai izin.</p>';
+    } else {
+      // Use all extracted paragraphs, preserving wording.
+      const paras = [];
+      content.forEach(x => x.paragraphs.forEach(p => paras.push(p)));
+      const unique = [...new Set(paras)].filter(Boolean);
+      html += '<ul>' + unique.map(p => '<li>' + esc(p.replace(/^•\s*/, '')) + '</li>').join('') + '</ul>';
+    }
+    html += '</div>';
+  }
+
+  c.innerHTML = html;
+  el.appendChild(c);
+
+  const footer = document.createElement('div');
+  footer.className = 'footer';
+  footer.innerHTML = '<span>Jaringan Peer to Peer • Sharing Data</span><span>' + (index + 1) + '</span>';
+  el.appendChild(footer);
+  return el;
+}
+
+const presentation = document.getElementById('presentation');
+sourceSlides.forEach((items, i) => presentation.appendChild(makeSlide(items, i)));
+
+let current = 0;
+const slideEls = [...document.querySelectorAll('.slide')];
+
+function showSlide(n) {
+  current = Math.max(0, Math.min(n, slideEls.length - 1));
+  slideEls.forEach((s, i) => s.classList.toggle('active', i === current));
+  document.getElementById('counter').textContent = `${current + 1} / ${slideEls.length}`;
+  document.getElementById('progress').style.width = `${((current + 1) / slideEls.length) * 100}%`;
+}
+function nextSlide() { showSlide(current + 1); }
+function prevSlide() { showSlide(current - 1); }
+
+document.addEventListener('keydown', e => {
+  if (['ArrowRight','PageDown',' '].includes(e.key)) { e.preventDefault(); nextSlide(); }
+  if (['ArrowLeft','PageUp'].includes(e.key)) { e.preventDefault(); prevSlide(); }
+  if (e.key === 'Home') showSlide(0);
+  if (e.key === 'End') showSlide(slideEls.length - 1);
+  if (e.key.toLowerCase() === 'f') toggleFullscreen();
+});
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+  else document.exitFullscreen?.();
+}
+showSlide(0);
+</script>
+</body>
+</html>
